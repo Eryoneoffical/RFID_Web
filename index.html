@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>耗材RFID读写</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1,
+        h2 {
+            color: #333;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            text-align: center;
+            display: none;
+            /* 默认隐藏 */
+            white-space: pre-line;
+            /* 允许换行 */
+        }
+
+        #statusMessage {
+            margin: 0;
+        }
+
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            display: block;
+        }
+
+        .control-panel,
+        .read-panel,
+        .write-panel {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            width: calc(50% - 10px);
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        #stopReadBtn {
+            background-color: #dc3545;
+        }
+
+        #stopReadBtn:hover {
+            background-color: #c82333;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        #readResult {
+            background-color: #f8f9fa;
+            white-space: pre-wrap;
+            /* 保留换行 */
+            word-wrap: break-word;
+            min-height: 100px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ffeaa7;
+            margin-bottom: 20px;
+        }
+
+        /* 新增：解析结果样式 */
+        .parse-result {
+            margin-top: 15px;
+            border-top: 1px solid #ddd;
+            padding-top: 15px;
+        }
+
+        .parse-result h4 {
+            margin-top: 0;
+            color: #007bff;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .data-table th,
+        .data-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .data-table th {
+            background-color: #f2f2f2;
+            width: 30%;
+        }
+
+        .data-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .color-preview {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        .raw-data {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            margin-top: 15px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .raw-data-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #666;
+        }
+
+        /* 新增：耗材信息表单样式 */
+        .material-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .form-group input[type="text"]:focus,
+        .form-group input[type="number"]:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+
+        .color-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .color-picker-container {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .color-picker-label {
+            font-size: 14px;
+            color: #555;
+        }
+
+        .opacity-slider-container {
+            flex: 1;
+        }
+
+        .opacity-slider {
+            width: 100%;
+            margin-top: 5px;
+        }
+
+        .opacity-value {
+            font-size: 14px;
+            color: #555;
+            margin-top: 5px;
+        }
+
+        .generated-data {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            border: 1px solid #ddd;
+        }
+
+        .generated-data h4 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        #generatedFormat {
+            font-family: monospace;
+            font-size: 16px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            word-break: break-all;
+            margin-bottom: 10px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        /* 自定义输入框样式 */
+        .custom-input-container {
+            margin-top: 5px;
+            display: none;
+        }
+
+        .custom-input-container.show {
+            display: block;
+        }
+
+        /* 成功提示弹窗 */
+        .success-popup {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #d4edda;
+            color: #155724;
+            padding: 15px 20px;
+            border-radius: 5px;
+            border: 1px solid #c3e6cb;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            max-width: 300px;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .success-popup.fade-out {
+            animation: fadeOut 0.5s ease-out forwards;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+
+            to {
+                opacity: 0;
+            }
+        }
+
+        .success-popup h4 {
+            margin-top: 0;
+            margin-bottom: 8px;
+            color: #155724;
+        }
+
+        .success-popup p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 600px) {
+            .material-form {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group.full-width {
+                grid-column: span 1;
+            }
+
+            .form-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            button {
+                width: 100%;
+                margin: 5px 0;
+            }
+
+            .success-popup {
+                left: 20px;
+                right: 20px;
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>📱 手机耗材NFC读写工具</h1>
+
+        <div class="warning">
+            <strong>重要提示：</strong>
+            <ul>
+                <li>本工具仅能在 <strong>Android 版 Chrome 浏览器</strong> 中使用。</li>
+                <li>请确保手机NFC功能已打开。</li>
+                <li>将标签贴近手机NFC感应区。</li>
+                <li><strong>iPhone (iOS) 系统不支持此功能。</strong></li>
+            </ul>
+        </div>
+
+        <!-- 状态信息显示区域 -->
+        <div id="statusBox" class="status">
+            <p id="statusMessage"></p>
+        </div>
+
+        <!-- 控制面板 -->
+        <div class="control-panel">
+            <h2>第一步：检查与授权</h2>
+            <button id="checkNFCBtn">检查NFC支持与权限</button>
+            <p id="supportInfo">点击按钮检查浏览器是否支持Web NFC。</p>
+        </div>
+
+        <!-- 读取面板 -->
+        <div class="read-panel">
+            <h2>第二步：读取标签数据</h2>
+            <p>点击"开始读取"后将标签贴近手机。</p>
+            <button id="startReadBtn" disabled>开始读取</button>
+            <button id="stopReadBtn" disabled>停止读取</button>
+
+            <h3>读取结果：</h3>
+            <div id="readResult" class="raw-data" placeholder="读取到的数据将显示在这里..."></div>
+
+            <!-- 解析结果区域 -->
+            <div id="parseResult" class="parse-result" style="display: none;">
+                <h4>📊 数据解析结果</h4>
+                <table id="dataTable" class="data-table">
+                    <!-- 表格内容将通过JavaScript动态生成 -->
+                </table>
+                <div class="raw-data-title">原始数据：</div>
+                <div id="rawDataText" class="raw-data"></div>
+            </div>
+        </div>
+
+        <!-- 写入面板 -->
+        <div class="write-panel">
+            <h2>第三步：写入耗材数据到标签</h2>
+            <p>填写以下耗材信息，然后点击"生成并写入"按钮写入标签：</p>
+
+            <div class="material-form">
+                <!-- 第一行 -->
+                <div class="form-group">
+                    <label for="manufacturerSelect">厂商信息:</label>
+                    <select id="manufacturerSelect">
+                        <option value="ERYONE" selected>艾瑞旺 (ERYONE)</option>
+                        <option value="OTHER">其他</option>
+                    </select>
+                    <div id="manufacturerCustomContainer" class="custom-input-container">
+                        <input type="text" id="manufacturerCustom" maxlength="10" placeholder="请输入其他厂商信息">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="materialTypeSelect">耗材类型:</label>
+                    <select id="materialTypeSelect">
+                        <option value="PLA">PLA</option>
+                        <option value="ABS">ABS</option>
+                        <option value="PETG">PETG</option>
+                        <option value="TPU">TPU</option>
+                        <option value="PA">尼龙 (PA)</option>
+                        <option value="PC">PC</option>
+                        <option value="ASA">ASA</option>
+                        <option value="PP">PP</option>
+                        <option value="PPA">PPA</option>
+                        <option value="PPS">PPS</option>
+                        <option value="PVA">PVA</option>
+                        <option value="PVB">PVB</option>
+                        <option value="OTHER">其他</option>
+                    </select>
+                    <div id="materialTypeCustomContainer" class="custom-input-container">
+                        <input type="text" id="materialTypeCustom" maxlength="4" placeholder="请输入其他耗材类型(4字以内)">
+                    </div>
+                </div>
+
+                <!-- 第二行 -->
+                <div class="form-group">
+                    <label for="subMaterialSelect">子耗材:</label>
+                    <select id="subMaterialSelect">
+                        <option value="    ">无</option>
+                        <option value="CF">碳纤维 (CF)</option>
+                        <option value="GF">玻璃纤维 (GF)</option>
+                        <option value="HS">高速 (HS)</option>
+                        <option value="Lite">Lite</option>
+                        <option value="OTHER">其他</option>
+                    </select>
+                    <div id="subMaterialCustomContainer" class="custom-input-container">
+                        <input type="text" id="subMaterialCustom" maxlength="4" placeholder="请输入其他子耗材类型(4字以内)">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>颜色与透明度:</label>
+                    <div class="color-section">
+                        <div class="color-picker-container">
+                            <div class="color-picker-label">颜色:</div>
+                            <input type="color" id="materialColor" value="#000000">
+                        </div>
+                        <div class="opacity-slider-container">
+                            <div class="color-picker-label">透明度:</div>
+                            <input type="range" id="opacitySlider" class="opacity-slider" min="0" max="100" value="100">
+                            <div class="opacity-value" id="opacityValue">100% (FF)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 第三行：温度设置 -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="minTemp">最低温度 (°C):</label>
+                        <input type="number" id="minTemp" min="0" max="300" value="190" placeholder="例如: 190">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="maxTemp">最高温度 (°C):</label>
+                        <input type="number" id="maxTemp" min="0" max="300" value="230" placeholder="例如: 230">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bedTemp">热床温度 (°C):</label>
+                        <input type="number" id="bedTemp" min="0" max="150" value="60" placeholder="例如: 60">
+                    </div>
+                </div>
+
+                <!-- 第四行：其他参数 -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="diameter">直径 (mm):</label>
+                        <input type="number" id="diameter" min="0.1" max="5.0" step="0.1" value="1.75"
+                            placeholder="例如: 1.75">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="weight">重量 (g):</label>
+                        <input type="number" id="weight" min="1" max="5000" value="1000" placeholder="例如: 1000">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="productionDate">生产日期 (YYMM):</label>
+                        <input type="text" id="productionDate" maxlength="4" pattern="\d{4}" placeholder="例如: 2602">
+                    </div>
+                </div>
+            </div>
+
+            <div class="generated-data">
+                <h4>生成的耗材数据格式:</h4>
+                <div id="generatedFormat" class="raw-data">;ERYONE;PLA; ;000000;FF;190;230;60;175;1000;2602;</div>
+                <p>格式说明: ;厂商;耗材类型;子耗材;颜色;透明度;最低温度;最高温度;热床温度;直径;重量;生产日期;</p>
+            </div>
+
+            <button id="writeBtn" disabled>生成并写入</button>
+            <button id="generateBtn">仅生成数据</button>
+        </div>
+    </div>
+
+    <script>
+        // DOM 元素引用
+        const checkNFCBtn = document.getElementById('checkNFCBtn');
+        const startReadBtn = document.getElementById('startReadBtn');
+        const stopReadBtn = document.getElementById('stopReadBtn');
+        const writeBtn = document.getElementById('writeBtn');
+        const supportInfo = document.getElementById('supportInfo');
+        const statusBox = document.getElementById('statusBox');
+        const statusMessage = document.getElementById('statusMessage');
+        const readResult = document.getElementById('readResult');
+        const parseResult = document.getElementById('parseResult');
+        const dataTable = document.getElementById('dataTable');
+        const rawDataText = document.getElementById('rawDataText');
+        const generatedFormat = document.getElementById('generatedFormat');
+
+        // 写入面板的表单元素
+        const manufacturerInput = document.getElementById('manufacturer');
+        const manufacturerSelect = document.getElementById('manufacturerSelect');
+        const manufacturerCustomContainer = document.getElementById('manufacturerCustomContainer');
+        const manufacturerCustom = document.getElementById('manufacturerCustom');
+        const materialTypeSelect = document.getElementById('materialTypeSelect');
+        const materialTypeCustomContainer = document.getElementById('materialTypeCustomContainer');
+        const materialTypeCustom = document.getElementById('materialTypeCustom');
+        const subMaterialSelect = document.getElementById('subMaterialSelect');
+        const subMaterialCustomContainer = document.getElementById('subMaterialCustomContainer');
+        const subMaterialCustom = document.getElementById('subMaterialCustom');
+        const materialColorInput = document.getElementById('materialColor');
+        const opacitySlider = document.getElementById('opacitySlider');
+        const opacityValue = document.getElementById('opacityValue');
+        const minTempInput = document.getElementById('minTemp');
+        const maxTempInput = document.getElementById('maxTemp');
+        const bedTempInput = document.getElementById('bedTemp');
+        const diameterInput = document.getElementById('diameter');
+        const weightInput = document.getElementById('weight');
+        const productionDateInput = document.getElementById('productionDate');
+        const generateBtn = document.getElementById('generateBtn');
+
+        // 全局变量，用于控制读取过程
+        let isReading = false;
+        let abortController = null; // 用于停止读取
+
+        // 更新状态信息函数
+        function updateStatus(message, type = 'info') {
+            statusMessage.textContent = message;
+            statusBox.className = 'status ' + type; // 设置样式类
+            statusBox.style.display = 'block';
+            console.log(type.toUpperCase() + ': ' + message);
+        }
+
+        // 显示成功弹窗
+        function showSuccessPopup(title, message) {
+            // 移除已有的弹窗
+            const existingPopup = document.querySelector('.success-popup');
+            if (existingPopup) {
+                existingPopup.remove();
+            }
+
+            // 创建弹窗
+            const popup = document.createElement('div');
+            popup.className = 'success-popup';
+            popup.innerHTML = `
+                <h4>${title}</h4>
+                <p>${message}</p>
+            `;
+
+            document.body.appendChild(popup);
+
+            // 5秒后自动移除
+            setTimeout(() => {
+                popup.classList.add('fade-out');
+                setTimeout(() => {
+                    if (popup.parentNode) {
+                        popup.parentNode.removeChild(popup);
+                    }
+                }, 500);
+            }, 5000);
+        }
+
+        // 解析数据函数
+        function parseData(text) {
+            // 清空之前的解析结果
+            parseResult.style.display = 'none';
+            dataTable.innerHTML = '';
+            rawDataText.textContent = '';
+
+            // 检查是否符合解析条件：以";"开头，以";"结尾
+            if (text.startsWith(';') && text.endsWith(';')) {
+                console.log('符合解析条件，开始解析数据');
+
+                // 显示解析结果区域
+                parseResult.style.display = 'block';
+
+                // 保存原始数据
+                rawDataText.textContent = text;
+
+                // 分割数据
+                const parts = text.split(';');
+
+                // 移除第一个和最后一个(空)元素
+                const dataParts = parts.slice(1, -1);
+
+                // 定义字段名称
+                const fieldNames = [
+                    '厂商',
+                    '耗材类型',
+                    '子耗材',
+                    '颜色',
+                    '透明度',
+                    '最低温度',
+                    '最高温度',
+                    '热床温度',
+                    '直径(mm)',
+                    '重量(g)',
+                    '生产日期'
+                ];
+
+                // 构建表格
+                let tableHTML = '';
+
+                for (let i = 0; i < fieldNames.length && i < dataParts.length; i++) {
+                    const fieldName = fieldNames[i];
+                    let fieldValue = dataParts[i];
+
+                    // 特殊处理某些字段
+                    if (fieldName === '子耗材' && fieldValue.trim() === '') {
+                        fieldValue = '无';
+                    }
+
+                    if (fieldName === '颜色') {
+                        // 处理颜色，显示色块
+                        const colorValue = fieldValue;
+                        let displayValue = fieldValue;
+                        let colorBlock = '';
+
+                        if (/^[0-9A-Fa-f]{6}$/.test(fieldValue)) {
+                            // 如果是6位十六进制颜色代码
+                            displayValue = '#' + fieldValue.toUpperCase();
+                            colorBlock = `<span class="color-preview" style="background-color: #${fieldValue};"></span>`;
+                        }
+
+                        tableHTML += `
+                            <tr>
+                                <th>${fieldName}</th>
+                                <td>${colorBlock}${displayValue}</td>
+                            </tr>
+                        `;
+                    } else if (fieldName === '透明度') {
+                        // 处理透明度
+                        let opacityText = fieldValue;
+                        if (/^[0-9A-Fa-f]{2}$/.test(fieldValue)) {
+                            const opacityDecimal = parseInt(fieldValue, 16);
+                            opacityText = `${fieldValue} (${opacityDecimal}%)`;
+                        }
+                        tableHTML += `
+                            <tr>
+                                <th>${fieldName}</th>
+                                <td>${opacityText}</td>
+                            </tr>
+                        `;
+                    } else if (fieldName === '生产日期') {
+                        // 处理生产日期 2602 -> 2026年02月
+                        let dateText = fieldValue;
+                        if (/^\d{4}$/.test(fieldValue)) {
+                            const year = '20' + fieldValue.substring(0, 2);
+                            const month = fieldValue.substring(2);
+                            dateText = `${year}年${month}月`;
+                        }
+                        tableHTML += `
+                            <tr>
+                                <th>${fieldName}</th>
+                                <td>${dateText}</td>
+                            </tr>
+                        `;
+                    } else if (fieldName === '最低温度' || fieldName === '最高温度' || fieldName === '热床温度') {
+                        // 温度字段添加单位
+                        tableHTML += `
+                            <tr>
+                                <th>${fieldName}</th>
+                                <td>${fieldValue}°C</td>
+                            </tr>
+                        `;
+                    } else if (fieldName === '直径(mm)') {
+                        // 直径字段处理
+                        let diameterText = fieldValue;
+                        if (/^\d+$/.test(fieldValue)) {
+                            const diameter = parseInt(fieldValue) / 100;
+                            diameterText = `${diameter}mm (${fieldValue}/100)`;
+                        }
+                        tableHTML += `
+                            <tr>
+                                <th>${fieldName}</th>
+                                <td>${diameterText}</td>
+                            </tr>
+                        `;
+                    } else {
+                        // 普通字段
+                        tableHTML += `
+                            <tr>
+                                <th>${fieldName}</th>
+                                <td>${fieldValue}</td>
+                            </tr>
+                        `;
+                    }
+                }
+
+                dataTable.innerHTML = tableHTML;
+
+                return {
+                    success: true,
+                    fields: dataParts,
+                    fieldNames: fieldNames
+                };
+            } else {
+                console.log('不符合解析条件，显示原始文本');
+                return {
+                    success: false,
+                    message: '数据格式不符合解析条件'
+                };
+            }
+        }
+
+        // 获取厂商信息值
+        function getManufacturerValue() {
+            if (manufacturerSelect.value === 'OTHER') {
+                return manufacturerCustom.value.trim() || 'ERYONE';
+            }
+            return manufacturerSelect.value;
+        }
+
+        // 获取耗材类型值
+        function getMaterialTypeValue() {
+            if (materialTypeSelect.value === 'OTHER') {
+                return materialTypeCustom.value.trim() || 'PLA';
+            }
+            return materialTypeSelect.value;
+        }
+
+        // 获取子耗材值
+        function getSubMaterialValue() {
+            if (subMaterialSelect.value === 'OTHER') {
+                const customValue = subMaterialCustom.value.trim();
+                return customValue || '    ';
+            }
+            return subMaterialSelect.value;
+        }
+
+        // 生成耗材数据格式
+        function generateMaterialData() {
+            // 获取表单值
+            const manufacturer = getManufacturerValue();
+            const materialType = getMaterialTypeValue();
+            let subMaterial = getSubMaterialValue();
+
+            // 颜色处理：从#RRGGBB转换为RRGGBB
+            let color = materialColorInput.value;
+            if (color.startsWith('#')) {
+                color = color.substring(1).toUpperCase();
+            }
+
+            // 透明度处理：0-100转换为两位十六进制
+            const opacityPercent = parseInt(opacitySlider.value);
+            const opacityHex = Math.round(opacityPercent * 255 / 100).toString(16).toUpperCase().padStart(2, '0');
+
+            // 温度处理
+            const minTemp = minTempInput.value || '190';
+            const maxTemp = maxTempInput.value || '230';
+            const bedTemp = bedTempInput.value || '60';
+
+            // 直径处理：1.75 -> 175
+            const diameter = diameterInput.value || '1.75';
+            const diameterInt = Math.round(parseFloat(diameter) * 100);
+
+            // 重量处理
+            const weight = weightInput.value || '1000';
+
+            // 生产日期处理
+            const productionDate = productionDateInput.value || '2602';
+
+            // 生成格式字符串
+            const materialData = `;${manufacturer};${materialType};${subMaterial};${color};${opacityHex};${minTemp};${maxTemp};${bedTemp};${diameterInt};${weight};${productionDate};`;
+
+            return materialData;
+        }
+
+        // 更新生成的数据显示
+        function updateGeneratedData() {
+            const materialData = generateMaterialData();
+            generatedFormat.textContent = materialData;
+        }
+
+        // 初始化事件监听器
+        function initEventListeners() {
+            // 监听所有输入变化，实时更新生成的数据
+            const inputs = [
+                manufacturerSelect, manufacturerCustom,
+                materialTypeSelect, materialTypeCustom,
+                subMaterialSelect, subMaterialCustom, materialColorInput,
+                opacitySlider, minTempInput, maxTempInput, bedTempInput,
+                diameterInput, weightInput, productionDateInput
+            ];
+
+            inputs.forEach(input => {
+                input.addEventListener('input', updateGeneratedData);
+            });
+
+            manufacturerSelect.addEventListener('change', function () {
+                if (this.value === 'OTHER') {
+                    manufacturerCustomContainer.classList.add('show');
+                    manufacturerCustom.focus();
+                } else {
+                    manufacturerCustomContainer.classList.remove('show');
+                }
+                updateGeneratedData();
+            });
+
+            // 透明度滑块显示
+            opacitySlider.addEventListener('input', function () {
+                const value = this.value;
+                const hexValue = Math.round(value * 255 / 100).toString(16).toUpperCase().padStart(2, '0');
+                opacityValue.textContent = `${value}% (${hexValue})`;
+                updateGeneratedData();
+            });
+
+            // 耗材类型下拉框变化
+            materialTypeSelect.addEventListener('change', function () {
+                if (this.value === 'OTHER') {
+                    materialTypeCustomContainer.classList.add('show');
+                    materialTypeCustom.focus();
+                } else {
+                    materialTypeCustomContainer.classList.remove('show');
+                }
+                updateGeneratedData();
+            });
+
+            // 子耗材下拉框变化
+            subMaterialSelect.addEventListener('change', function () {
+                if (this.value === 'OTHER') {
+                    subMaterialCustomContainer.classList.add('show');
+                    subMaterialCustom.focus();
+                } else {
+                    subMaterialCustomContainer.classList.remove('show');
+                }
+                updateGeneratedData();
+            });
+
+            // 仅生成数据按钮
+            generateBtn.addEventListener('click', function () {
+                updateGeneratedData();
+                updateStatus('数据已生成，可复制使用或写入标签。', 'info');
+            });
+
+            // 设置生产日期默认值为当前年月
+            const now = new Date();
+            const currentYear = now.getFullYear().toString().substring(2);
+            const currentMonth = (now.getMonth() + 1).toString().padStart(2, '0');
+            if (!productionDateInput.value) {
+                productionDateInput.value = currentYear + currentMonth;
+                updateGeneratedData();
+            }
+        }
+
+        // 1. 检查NFC支持与权限 (安全初始化版)
+        checkNFCBtn.addEventListener('click', async function () {
+            readResult.textContent = '';
+            let detailedLog = '=== Web NFC 环境诊断报告 ===\n\n';
+            updateStatus('正在检测NFC支持...', 'info');
+
+            // 第一步：安全地探测全局对象中可能存在的NFC相关API
+            detailedLog += '1. 探测全局NFC对象...\n';
+            const globalObjectsToCheck = [
+                'navigator.nfc',
+                'window.NDEFReader',
+                'navigator.ndef',
+                'window.nfc',
+                'NDEFReader' // 直接检查构造函数
+            ];
+
+            let foundApiPath = null;
+            let foundApiObject = null;
+
+            for (const objPath of globalObjectsToCheck) {
+                try {
+                    // 使用eval安全地访问可能的多级属性 (仅用于诊断)
+                    const value = eval(objPath);
+                    if (value) {
+                        foundApiPath = objPath;
+                        foundApiObject = value;
+                        detailedLog += `   ✅ 发现: ${objPath}\n`;
+                        break; // 找到第一个就停止
+                    }
+                } catch (e) {
+                    // 忽略访问错误
+                }
+            }
+
+            if (!foundApiPath) {
+                detailedLog += '   ❌ 未在全局对象中找到NFC API。\n';
+                detailedLog += '\n2. 建议：\n';
+                detailedLog += '   a) 确保使用Android Chrome/Edge最新版\n';
+                detailedLog += '   b) 在chrome://flags中搜索并启用"WebNFC"\n';
+                updateStatus('❌ 未找到NFC API对象', 'error');
+                readResult.textContent = detailedLog;
+                return;
+            }
+
+            detailedLog += `\n2. 使用找到的API路径: ${foundApiPath}\n`;
+
+            // 第二步：根据找到的API路径，采用不同的调用策略
+            detailedLog += '\n3. 尝试初始化与请求权限...\n';
+            updateStatus('正在初始化NFC并请求权限...', 'info');
+
+            try {
+                let ndefReader;
+
+                // 策略A：如果找到的是 NDEFReader 构造函数
+                if (foundApiPath === 'window.NDEFReader' || foundApiPath === 'NDEFReader') {
+                    ndefReader = new NDEFReader();
+                    detailedLog += '   方式: 使用 new NDEFReader()\n';
+                }
+                // 策略B：如果找到的是 navigator.nfc 对象
+                else if (foundApiPath === 'navigator.nfc') {
+                    // 注意：根据Web NFC标准，navigator.nfc 下没有直接的scan方法
+                    // 它应该通过 NDEFReader 使用，但某些实现可能不同
+                    detailedLog += '   方式: 尝试通过 navigator.nfc 访问\n';
+
+                    // 先尝试标准方式
+                    if (window.NDEFReader) {
+                        ndefReader = new NDEFReader();
+                        detailedLog += '   -> 回退到标准 NDEFReader\n';
+                    } else {
+                        // 如果浏览器非标准，尝试直接调用
+                        throw new Error('非标准navigator.nfc实现，需要特定调用方式');
+                    }
+                }
+                // 策略C：其他发现的对象
+                else {
+                    detailedLog += `   方式: 尝试直接使用 ${foundApiPath}\n`;
+                    // 对于不确定的对象，尝试通用的scan调用
+                    if (typeof foundApiObject.scan === 'function') {
+                        // 如果对象本身有scan方法，直接使用
+                        await foundApiObject.scan();
+                        detailedLog += '   ✅ 权限请求已发送（非标准API）\n';
+
+                        // 如果成功，我们假设权限已获得
+                        updateStatus('✅ 非标准API就绪，请尝试读写操作', 'info');
+                        startReadBtn.disabled = false;
+                        writeBtn.disabled = false;
+                        checkNFCBtn.disabled = true;
+                        checkNFCBtn.textContent = 'API就绪';
+                        readResult.textContent = detailedLog;
+                        return;
+                    } else {
+                        throw new Error(`找到的对象 ${foundApiPath} 没有 .scan() 方法`);
+                    }
+                }
+
+                // 对于标准的 NDEFReader 实例，进行扫描
+                if (ndefReader && typeof ndefReader.scan === 'function') {
+                    // 设置一个超时，防止权限请求卡住
+                    const timeoutPromise = new Promise((_, reject) => {
+                        setTimeout(() => reject(new Error('权限请求超时(10秒)')), 10000);
+                    });
+
+                    await Promise.race([
+                        ndefReader.scan(),
+                        timeoutPromise
+                    ]);
+
+                    detailedLog += '   ✅ NDEFReader.scan() 调用成功\n';
+                    detailedLog += '   ✅ NFC权限应已获得\n\n';
+                    detailedLog += '✨ 初始化成功！现在可以：\n';
+                    detailedLog += '   • 点击"开始读取"读取标签\n';
+                    detailedLog += '   • 输入文本后点击"写入数据"写入标签\n';
+
+                    // 保存reader实例供后续使用（如果需要）
+                    window._ndefReader = ndefReader;
+
+                    updateStatus('✅ NFC功能已就绪！', 'success');
+                    startReadBtn.disabled = false;
+                    writeBtn.disabled = false;
+                    checkNFCBtn.disabled = true;
+                    checkNFCBtn.textContent = '已就绪';
+                    supportInfo.innerHTML = '<strong>✅ Web NFC 初始化成功</strong>';
+
+                } else {
+                    throw new Error('NDEFReader实例或.scan()方法不可用');
+                }
+
+                readResult.textContent = detailedLog;
+
+            } catch (error) {
+                detailedLog += `   ❌ 初始化失败:\n`;
+                detailedLog += `      错误: ${error.name}\n`;
+                detailedLog += `      信息: ${error.message}\n\n`;
+
+                if (error.name === 'NotAllowedError') {
+                    detailedLog += '   💡 您拒绝了权限请求。请刷新页面重试。\n';
+                    updateStatus('❌ 权限被拒绝', 'error');
+                } else if (error.name === 'NotSupportedError') {
+                    detailedLog += '   💡 您的设备不支持NDEF标签扫描。\n';
+                    updateStatus('❌ 设备不支持', 'error');
+                } else if (error.message.includes('超时')) {
+                    detailedLog += '   💡 权限请求超时。可能是：\n';
+                    detailedLog += '       1. 权限弹窗被其他界面遮挡\n';
+                    detailedLog += '       2. 浏览器未正确触发权限请求\n';
+                    detailedLog += '       3. 尝试重启浏览器\n';
+                    updateStatus('⏱️ 请求超时', 'info');
+                } else {
+                    detailedLog += '   💡 可能的原因：\n';
+                    detailedLog += '       1. API调用方式不匹配您的浏览器\n';
+                    detailedLog += '       2. 尝试在chrome://flags启用"Experimental Web Platform features"\n';
+
+                    // 特殊建议：如果其他网站能用，尝试直接调用他们的方式
+                    detailedLog += '\n   🔍 由于您在webnfc.org可用，请尝试：\n';
+                    detailedLog += '       打开浏览器开发者工具(F12)→控制台(Console)\n';
+                    detailedLog += '       输入: NDEFReader 并回车，查看是否定义\n';
+                    detailedLog += '       输入: navigator.nfc 并回车，查看是否定义\n';
+
+                    updateStatus('⚠️ 初始化错误，请查看详情', 'error');
+                }
+
+                readResult.textContent = detailedLog;
+            }
+        });
+
+        // 2. 开始读取标签 (重构版 - 更贴近规范实现)
+        startReadBtn.addEventListener('click', async () => {
+            isReading = true;
+            startReadBtn.disabled = true;
+            stopReadBtn.disabled = false;
+            readResult.innerHTML = '请将NFC标签贴近手机背面...<br>(确保标签在NFC感应区内停留片刻)';
+            parseResult.style.display = 'none'; // 隐藏之前的解析结果
+            updateStatus('正在启动扫描，请靠近标签...', 'info');
+
+            abortController = new AbortController();
+
+            try {
+                // 使用更标准的 NDEFReader 调用方式
+                const ndefReader = new NDEFReader();
+
+                // 方案A: 使用更明确的 promise 和 event listener 组合
+                // 这是许多能工作的站点采用的模式
+                console.log('开始扫描...');
+
+                // 先添加读取事件监听器
+                ndefReader.addEventListener('reading', ({ message, serialNumber }) => {
+                    console.log('✅ 检测到 reading 事件！');
+                    updateStatus('✅ 检测到标签！', 'success');
+
+                    // 构建显示结果
+                    let resultText = `=== NFC标签读取成功 ===\n`;
+                    resultText += `时间: ${new Date().toLocaleTimeString()}\n`;
+                    resultText += `序列号: ${serialNumber || '未提供'}\n`;
+                    resultText += `记录数: ${message.records.length}\n\n`;
+
+                    const textDecoder = new TextDecoder();
+                    message.records.forEach((record, index) => {
+                        resultText += `[记录 #${index + 1}]\n`;
+                        resultText += `  类型: ${record.recordType}\n`;
+
+                        try {
+                            if (record.recordType === 'text') {
+                                const text = textDecoder.decode(record.data);
+                                resultText += `  内容: ${text}\n`;
+
+                                // 尝试解析数据
+                                const parseResult = parseData(text);
+                                if (!parseResult.success) {
+                                    resultText += `  说明: 格式不符合解析条件\n`;
+                                }
+
+                                if (record.lang) resultText += `  语言: ${record.lang}\n`;
+                            } else if (record.recordType === 'url') {
+                                const url = textDecoder.decode(record.data);
+                                resultText += `  URL: ${url}\n`;
+                            } else if (record.recordType === 'mime' && record.mediaType) {
+                                resultText += `  MIME类型: ${record.mediaType}\n`;
+                                resultText += `  数据大小: ${record.data.byteLength} 字节\n`;
+                            } else {
+                                resultText += `  数据: ${textDecoder.decode(record.data)}\n`;
+                            }
+                        } catch (e) {
+                            resultText += `  数据解码失败\n`;
+                        }
+                        resultText += '\n';
+                    });
+
+                    readResult.textContent = resultText;
+
+                    // 显示读取成功弹窗
+                    showSuccessPopup('✅ 读取成功', 'NFC标签数据已成功读取！');
+
+                    // 单次读取后自动停止
+                    if (abortController) {
+                        abortController.abort();
+                        isReading = false;
+                        startReadBtn.disabled = false;
+                        stopReadBtn.disabled = true;
+                        updateStatus('读取完成，可再次读取。', 'success');
+                    }
+                });
+
+                // 添加错误事件监听器
+                ndefReader.addEventListener('readingerror', () => {
+                    console.log('❌ 读取过程中发生错误');
+                    updateStatus('标签读取失败，请重试。', 'error');
+                    readResult.innerHTML += '\n\n❌ 读取失败，请确保标签类型正确且可读。';
+                });
+
+                // 最后启动扫描，传入终止信号
+                await ndefReader.scan({ signal: abortController.signal });
+
+                updateStatus('✅ 扫描已启动，请靠近标签...', 'info');
+                readResult.innerHTML += '\n\n✅ 扫描器已激活，等待标签...';
+
+                // 设置超时，防止无限等待
+                setTimeout(() => {
+                    if (isReading) {
+                        updateStatus('⚠️ 未检测到标签，请确保标签在感应区内', 'info');
+                        readResult.innerHTML += '<br><br>⏱️ 等待超时，未检测到标签。<br>可能原因：<br>1. 标签未贴近感应区<br>2. 标签类型不受支持<br>3. 标签已损坏或无数据';
+                    }
+                }, 15000); // 15秒后提示
+
+            } catch (error) {
+                console.error('扫描启动失败:', error);
+
+                if (error.name === 'AbortError') {
+                    updateStatus('读取已停止。', 'info');
+                } else if (error.name === 'NotAllowedError') {
+                    updateStatus('❌ 无NFC权限，请先授权。', 'error');
+                    readResult.textContent = '错误: NFC权限未获得。\n请先点击"检查NFC支持与权限"按钮完成授权。';
+                } else if (error.name === 'NotSupportedError') {
+                    updateStatus('❌ 设备不支持NDEF扫描。', 'error');
+                    readResult.textContent = `错误: ${error.message}\n\n您的设备可能不支持此类型的NFC标签读写。`;
+                } else {
+                    updateStatus(`❌ 扫描失败: ${error.message}`, 'error');
+                    readResult.textContent = `错误详情:\n名称: ${error.name}\n信息: ${error.message}\n\n请检查控制台获取更多信息。`;
+                }
+
+                isReading = false;
+                startReadBtn.disabled = false;
+                stopReadBtn.disabled = true;
+            }
+        });
+
+        // 3. 停止读取标签
+        stopReadBtn.addEventListener('click', () => {
+            if (abortController) {
+                abortController.abort();
+            }
+            isReading = false;
+            startReadBtn.disabled = false;
+            stopReadBtn.disabled = true;
+            updateStatus('读取已手动停止。', 'info');
+        });
+
+        // 4. 写入数据到标签
+        writeBtn.addEventListener('click', async () => {
+            const materialData = generateMaterialData();
+
+            if (!materialData) {
+                updateStatus('❌ 请先填写完整的耗材信息。', 'error');
+                return;
+            }
+
+            updateStatus('请将要写入的标签贴近手机背面...', 'info');
+
+            try {
+                // 调用写入API
+                const ndefWriter = new NDEFReader();
+                await ndefWriter.write({
+                    records: [{
+                        recordType: "text",
+                        data: materialData,
+                        lang: "en"
+                    }]
+                });
+
+                // 显示写入成功弹窗
+                showSuccessPopup('✅ 写入成功', '耗材数据已成功写入NFC标签！');
+
+                // 在顶部状态栏显示详细信息（带换行）
+                updateStatus('✅ 耗材数据写入成功！\n写入内容: ' + materialData, 'success');
+            } catch (error) {
+                updateStatus(`❌ 写入失败: ${error.message}`, 'error');
+            }
+        });
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function () {
+            initEventListeners();
+            updateGeneratedData(); // 初始生成一次数据
+        });
+    </script>
+</body>
+
+</html>
