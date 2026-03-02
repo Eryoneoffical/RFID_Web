@@ -69,6 +69,8 @@ https://eryoneoffical.github.io/RFID_Web/?data=en~ERYONE-PLA--000000-FF-190-230-
 - Android用户：请使用Chrome浏览器，确保NFC已开启。
 - iOS用户：不支持Web NFC，但可通过扫描NFC标签（触发URL）或直接访问带参数的链接来查看耗材信息。可通过生成的写入数据格式通过其他APP自行写入标签中
 
+---
+
 ## 注意
 - 本协议中的所有字符均为URL安全字符（字母、数字、-、~），可直接在URL中传递，无需百分号编码。
 
