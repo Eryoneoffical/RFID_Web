@@ -554,7 +554,7 @@
             <div class="generated-data">
                 <h4>生成的耗材数据格式:</h4>
                 <div id="generatedFormat" class="raw-data">;ERYONE;PLA; ;000000;FF;190;230;60;175;1000;2602;</div>
-                <p>格式说明: ;厂商;耗材类型;子耗材;颜色;透明度;最低温度;最高温度;热床温度;直径;重量;生产日期;</p>
+                <p>格式说明: {厂商;耗材类型;子耗材;颜色;透明度;最低温度;最高温度;热床温度;直径;重量;生产日期}</p>
             </div>
 
             <button id="writeBtn" disabled>生成并写入</button>
@@ -648,7 +648,7 @@
             rawDataText.textContent = '';
 
             // 检查是否符合解析条件：以";"开头，以";"结尾
-            if (text.startsWith('{') && text.endsWith('}')) {
+            if (text.startsWith('en{') && text.endsWith('}')) {
                 console.log('符合解析条件，开始解析数据');
 
                 // 显示解析结果区域
@@ -657,11 +657,9 @@
                 // 保存原始数据
                 rawDataText.textContent = text;
 
-                // 分割数据
-                const parts = text.split(';');
-
-                // 移除第一个和最后一个(空)元素
-                const dataParts = parts.slice(1, -1);
+                // 去掉前缀 "en{" 和后缀 "}"
+                const content = text.slice(3, -1); // 从索引3到倒数第一个字符
+                const parts = content.split(';');
 
                 // 定义字段名称
                 const fieldNames = [
@@ -841,7 +839,7 @@
             const productionDate = productionDateInput.value || '2602';
 
             // 生成格式字符串
-            const materialData = `;${manufacturer};${materialType};${subMaterial};${color};${opacityHex};${minTemp};${maxTemp};${bedTemp};${diameterInt};${weight};${productionDate};`;
+            const materialData = `{${manufacturer};${materialType};${subMaterial};${color};${opacityHex};${minTemp};${maxTemp};${bedTemp};${diameterInt};${weight};${productionDate}}`;
 
             return materialData;
         }
@@ -851,6 +849,12 @@
             const materialData = generateMaterialData();
             generatedFormat.textContent = materialData;
         }
+
+        // 获取 URL 参数
+        function getQueryParam(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+}
 
         // 初始化事件监听器
         function initEventListeners() {
@@ -1254,6 +1258,29 @@
         document.addEventListener('DOMContentLoaded', function () {
             initEventListeners();
             updateGeneratedData(); // 初始生成一次数据
+
+            // 检查 URL 参数中是否包含耗材数据
+            const dataParam = getQueryParam('data');
+            if (dataParam) {
+                try {
+                    // 解码 URL 编码的字符串
+                    const decodedData = decodeURIComponent(dataParam);
+                    // 在读取结果区域显示原始数据
+                    readResult.textContent = `从 URL 参数中读取到数据：\n${decodedData}`;
+                    // 调用解析函数
+                    const parseResultObj = parseData(decodedData);
+                    if (parseResultObj.success) {
+                        updateStatus('✅ 从 URL 参数成功解析耗材数据', 'success');
+                        // 可选：自动滚动到解析结果区域
+                        parseResult.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                        updateStatus('⚠️ URL 参数中的数据格式不正确', 'error');
+                    }
+                } catch (e) {
+                    updateStatus('❌ URL 参数解码失败', 'error');
+                    console.error(e);
+                }
+            }
         });
     </script>
 </body>
