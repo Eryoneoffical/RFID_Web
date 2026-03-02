@@ -679,9 +679,9 @@
                 // 构建表格
                 let tableHTML = '';
 
-                for (let i = 0; i < fieldNames.length && i < dataParts.length; i++) {
+                for (let i = 0; i < fieldNames.length && i < parts.length; i++) {
                     const fieldName = fieldNames[i];
-                    let fieldValue = dataParts[i];
+                    let fieldValue = parts[i];
 
                     // 特殊处理某些字段
                     if (fieldName === '子耗材' && fieldValue.trim() === '') {
@@ -769,7 +769,7 @@
 
                 return {
                     success: true,
-                    fields: dataParts,
+                    fields: parts,
                     fieldNames: fieldNames
                 };
             } else {
