@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>耗材RFID读写</title>
+    <title>耗材信息RFID读写</title>
     <style>
         * {
             box-sizing: border-box;
@@ -397,7 +397,7 @@
 
 <body>
     <div class="container">
-        <h1>📱 手机耗材NFC读写工具</h1>
+        <h1>📱 手机耗材信息NFC读写工具</h1>
 
         <div class="warning">
             <strong>重要提示：</strong>
@@ -405,7 +405,7 @@
                 <li>本工具仅能在 <strong>Android 版 Chrome 浏览器</strong> 中使用。</li>
                 <li>请确保手机NFC功能已打开。</li>
                 <li>将标签贴近手机NFC感应区。</li>
-                <li><strong>iPhone (iOS) 系统不支持此功能。</strong></li>
+                <li><strong>iPhone (iOS) 系统不支持此功能，请自行下载 “NFC Tools” APP。</strong></li>
             </ul>
         </div>
 
@@ -1281,8 +1281,7 @@
                     if (parseResultObj && parseResultObj.success) {
                         updateStatus('✅ 从链接成功加载耗材数据', 'success');
                         // 可选：禁用 NFC 读写按钮，避免混淆
-                        if (startReadBtn) startReadBtn.disabled = true;
-                        if (writeBtn) writeBtn.disabled = true;
+                        parseResult.scrollIntoView({ behavior: 'smooth' });
                     } else {
                         updateStatus('⚠️ 链接中的数据格式不正确', 'error');
                     }
