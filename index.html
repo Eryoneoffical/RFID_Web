@@ -711,7 +711,8 @@
                         let opacityText = fieldValue;
                         if (/^[0-9A-Fa-f]{2}$/.test(fieldValue)) {
                             const opacityDecimal = parseInt(fieldValue, 16);
-                            opacityText = `${fieldValue} (${opacityDecimal}%)`;
+                            const opacityPercent = Math.round(opacityDecimal * 100 / 255);
+                            opacityText = `${fieldValue} (${opacityPercent}%)`;
                         }
                         tableHTML += `
                             <tr>
