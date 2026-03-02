@@ -54,8 +54,8 @@ https://eryoneoffical.github.io/RFID_Web/?data=en~ERYONE-PLA--000000-FF-190-230-
 
 ---
 
-## 配套Web工具
-- **项目提供了一个基于Web NFC API的网页工具（index.html），支持：**：
+## 配套Web工具：https://eryoneoffical.github.io/RFID_Web/
+- **项目提供了一个基于Web NFC API的网页工具（index.html），支持：**
   - 在Android Chrome中直接读取/写入符合本协议的NFC标签。
   - 通过URL参数自动解析并显示耗材信息。
   - 可视化展示颜色方块、温度范围、生产日期等。
