@@ -648,7 +648,7 @@
             rawDataText.textContent = '';
 
             // 检查是否符合解析条件：以";"开头，以";"结尾
-            if (text.startsWith('en{') && text.endsWith('}')) {
+            if (text.startsWith('en~') && text.endsWith('~')) {
                 console.log('符合解析条件，开始解析数据');
 
                 // 显示解析结果区域
@@ -659,7 +659,7 @@
 
                 // 去掉前缀 "en{" 和后缀 "}"
                 const content = text.slice(3, -1); // 从索引3到倒数第一个字符
-                const parts = content.split(';');
+                const parts = content.split('-');
 
                 // 定义字段名称
                 const fieldNames = [
@@ -839,7 +839,7 @@
             const productionDate = productionDateInput.value || '2602';
 
             // 生成格式字符串
-            const materialData = `{${manufacturer};${materialType};${subMaterial};${color};${opacityHex};${minTemp};${maxTemp};${bedTemp};${diameterInt};${weight};${productionDate}}`;
+            const materialData = `en~${manufacturer}-${materialType}-${subMaterial}-${color}-${opacityHex}-${minTemp}-${maxTemp}-${bedTemp}-${diameterInt}-${weight}-${productionDate}~`;
 
             return materialData;
         }
