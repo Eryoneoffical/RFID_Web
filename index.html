@@ -648,7 +648,7 @@
             rawDataText.textContent = '';
 
             // 检查是否符合解析条件：以";"开头，以";"结尾
-            if (text.startsWith(';') && text.endsWith(';')) {
+            if (text.startsWith('{') && text.endsWith('}')) {
                 console.log('符合解析条件，开始解析数据');
 
                 // 显示解析结果区域
@@ -1257,5 +1257,6 @@
         });
     </script>
 </body>
+
 
 </html>
