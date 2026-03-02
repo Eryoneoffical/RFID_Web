@@ -20,21 +20,22 @@
 ### 字段顺序及说明
 | 序号 | 字段名（中文） | 字段名（英文） | 说明 / 示例 |
 |------|----------------|----------------|-------------|
-| 0    | 头             | Header         | 固定为 `en~` |
-| 1    | 厂商           | Manufacturer   | 例如 `ERYONE` |
-| 2    | 耗材主类型     | Material Name  | 例如 `PLA`、`ABS`、`PETG` |
-| 3    | 耗材子类型     | Material Supplement | 若无子类型，为空 |
-| 4    | 颜色           | Color          | 6位十六进制RGB值，例如 `000000` 表示黑色，`FF00FF` 表示紫色 |
-| 5    | 透明度         | Transparency   | 2位十六进制，`00` = 完全透明，`FF` = 完全不透明 |
-| 6    | 打印最小温度   | Min Temperature | 单位：°C，例如 `190` |
-| 7    | 打印最大温度   | Max Temperature | 单位：°C，例如 `230` |
-| 8    | 热床温度       | Bed Temperature | 单位：°C，例如 `60` |
-| 9    | 直径           | Filament Diameter | 存储为整数，实际值需 **除以100** 得到毫米，例如 `175` = 1.75mm |
-| 10   | 重量           | Filament Weight | 单位：克（g），例如 `1000` |
-| 11   | 生产日期       | Production Date | 格式：`YYMM`，例如 `2602` 表示 2026年02月 |
-| 12   | 尾             | Tail           | 固定为 `~` |
+| 0    | URL            | URL           | 固定为 `https://eryoneoffical.github.io/RFID_Web/?data=` |
+| 1    | 头             | Header         | 固定为 `en~` |
+| 2    | 厂商           | Manufacturer   | 例如 `ERYONE` |
+| 3    | 耗材主类型     | Material Name  | 例如 `PLA`、`ABS`、`PETG` |
+| 4    | 耗材子类型     | Material Supplement | 若无子类型，为空 |
+| 5    | 颜色           | Color          | 6位十六进制RGB值，例如 `000000` 表示黑色，`FF00FF` 表示紫色 |
+| 6    | 透明度         | Transparency   | 2位十六进制，`00` = 完全透明，`FF` = 完全不透明 |
+| 7    | 打印最小温度   | Min Temperature | 单位：°C，例如 `190` |
+| 8    | 打印最大温度   | Max Temperature | 单位：°C，例如 `230` |
+| 9    | 热床温度       | Bed Temperature | 单位：°C，例如 `60` |
+| 10   | 直径           | Filament Diameter | 存储为整数，实际值需 **除以100** 得到毫米，例如 `175` = 1.75mm |
+| 11   | 重量           | Filament Weight | 单位：克（g），例如 `1000` |
+| 12   | 生产日期       | Production Date | 格式：`YYMM`，例如 `2602` 表示 2026年02月 |
+| 13   | 尾             | Tail           | 固定为 `~` |
 
-### 完整示例
+### 数据格式示例
 ```
 en~ERYONE-PLA--000000-FF-190-230-60-175-1000-2602~
 ```
