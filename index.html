@@ -801,7 +801,7 @@
         function getSubMaterialValue() {
             if (subMaterialSelect.value === 'OTHER') {
                 const customValue = subMaterialCustom.value.trim();
-                return customValue || '    ';
+                return customValue || '';
             }
             return subMaterialSelect.value;
         }
