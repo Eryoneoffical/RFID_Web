@@ -552,8 +552,8 @@
             </div>
 
             <div class="generated-data">
-                <h4>生成的写入数据格式(若无https://请自行添加):</h4>
-                <div id="generatedFormat" class="raw-data">eryoneoffical.github.io/RFID_Web/?data=en~ERYONE-PLA--000000-FF-190-230-60-175-1000-2602~</div>
+                <h4>生成的写入数据格式(若有https://请自行删除):</h4>
+                <div id="generatedFormat" class="raw-data">https://eryoneoffical.github.io/RFID_Web/?data=en~ERYONE-PLA--000000-FF-190-230-60-175-1000-2602~</div>
                 <p>格式说明(data后的数据): ~厂商-耗材类型-子耗材-颜色-透明度-最低温度-最高温度-热床温度-直径-重量-生产日期~</p>
             </div>
 
@@ -839,7 +839,7 @@
             const productionDate = productionDateInput.value || '2602';
 
             // 生成格式字符串
-            const materialData = `eryoneoffical.github.io/RFID_Web/?data=en~${manufacturer}-${materialType}-${subMaterial}-${color}-${opacityHex}-${minTemp}-${maxTemp}-${bedTemp}-${diameterInt}-${weight}-${productionDate}~`;
+            const materialData = `https://eryoneoffical.github.io/RFID_Web/?data=en~${manufacturer}-${materialType}-${subMaterial}-${color}-${opacityHex}-${minTemp}-${maxTemp}-${bedTemp}-${diameterInt}-${weight}-${productionDate}~`;
 
             return materialData;
         }
@@ -1141,6 +1141,16 @@
                             } else if (record.recordType === 'url') {
                                 const url = textDecoder.decode(record.data);
                                 resultText += `  URL: ${url}\n`;
+                                try {
+                                    const urlObj = new URL(url);
+                                    const dataParam = urlObj.searchParams.get('data');
+                                    if (dataParam) {
+                                        resultText += `  从URL参数中提取数据: ${dataParam}\n`;
+                                        parseData(dataParam); // 这会自动更新下方的解析表格
+                                    }
+                                } catch (e) {
+                                    // URL解析失败，忽略
+                                }
                             } else if (record.recordType === 'mime' && record.mediaType) {
                                 resultText += `  MIME类型: ${record.mediaType}\n`;
                                 resultText += `  数据大小: ${record.data.byteLength} 字节\n`;
@@ -1238,9 +1248,9 @@
                 const ndefWriter = new NDEFReader();
                 await ndefWriter.write({
                     records: [{
-                        recordType: "text",
+                        recordType: "url",
                         data: materialData,
-                        lang: "en"
+                        // lang: "en"
                     }]
                 });
 
