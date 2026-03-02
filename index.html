@@ -860,7 +860,7 @@
         function initEventListeners() {
             // 监听所有输入变化，实时更新生成的数据
             const inputs = [
-                manufacturerSelect, manufacturerCustom,
+                manufacturerSelect, vnufacturerCustom,
                 materialTypeSelect, materialTypeCustom,
                 subMaterialSelect, subMaterialCustom, materialColorInput,
                 opacitySlider, minTempInput, maxTempInput, bedTempInput,
@@ -1261,24 +1261,24 @@
 
             // 检查 URL 参数中是否包含耗材数据
             const dataParam = getQueryParam('data');
-            if (dataParam) {
+            if (dataParam && readResult && parseResult) {
                 try {
-                    // 解码 URL 编码的字符串
                     const decodedData = decodeURIComponent(dataParam);
-                    // 在读取结果区域显示原始数据
-                    readResult.textContent = `从 URL 参数中读取到数据：\n${decodedData}`;
+                    // 显示原始数据
+                    readResult.textContent = `从链接加载的数据：\n${decodedData}`;
                     // 调用解析函数
                     const parseResultObj = parseData(decodedData);
-                    if (parseResultObj.success) {
-                        updateStatus('✅ 从 URL 参数成功解析耗材数据', 'success');
-                        // 可选：自动滚动到解析结果区域
-                        parseResult.scrollIntoView({ behavior: 'smooth' });
+                    if (parseResultObj && parseResultObj.success) {
+                        updateStatus('✅ 从链接成功加载耗材数据', 'success');
+                        // 可选：禁用 NFC 读写按钮，避免混淆
+                        if (startReadBtn) startReadBtn.disabled = true;
+                        if (writeBtn) writeBtn.disabled = true;
                     } else {
-                        updateStatus('⚠️ URL 参数中的数据格式不正确', 'error');
+                        updateStatus('⚠️ 链接中的数据格式不正确', 'error');
                     }
                 } catch (e) {
+                    console.error('解析参数时出错：', e);
                     updateStatus('❌ URL 参数解码失败', 'error');
-                    console.error(e);
                 }
             }
         });
