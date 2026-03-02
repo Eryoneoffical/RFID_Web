@@ -486,7 +486,7 @@
                 <div class="form-group">
                     <label for="subMaterialSelect">子耗材:</label>
                     <select id="subMaterialSelect">
-                        <option value="    ">无</option>
+                        <option value="">无</option>
                         <option value="CF">碳纤维 (CF)</option>
                         <option value="GF">玻璃纤维 (GF)</option>
                         <option value="HS">高速 (HS)</option>
@@ -684,7 +684,7 @@
                     let fieldValue = parts[i];
 
                     // 特殊处理某些字段
-                    if (fieldName === '子耗材' && fieldValue.trim() === '') {
+                    if (fieldName === '子耗材' && fieldValue === '') {
                         fieldValue = '无';
                     }
 
