@@ -1,84 +1,95 @@
-# 艾瑞旺(ERYONE)3D打印耗材RFID数据协议
+# ERYONE Filament RFID — Smart Tags for Your Spools 🎯
 
-本项目定义了一套用于在NFC/RFID标签（如NATG213）上存储3D打印机耗材参数的标准化数据格式。该格式采用纯文本、URL安全字符，可直接作为URL参数传递，无需额外编码，兼容所有支持NFC的手机（Android/iOS扫描后自动打开网页并显示耗材信息）。
+Ever wish your 3D printer just *knew* what filament you loaded? That's exactly what this project does. ERYONE's RFID protocol lets you store filament settings directly on a small NFC sticker attached to your spool. Tap it with your phone and instantly see the material type, color, print temperatures, and more — no app required.
 
-- **与其它现有协议的优势**：
-  - 支持手机直接读写，浏览器和app均可，文本格式，可读性高
-  - 用户可自定义功能: 例如此卷耗材只能给指定用户用，防止别人误用 （通过加入自定义text文本）
-  - 方便个人用户批量给其它耗材加入RFID功能
+It works with any NFC-enabled phone. Android users get full read/write support right in Chrome. iPhone users can scan tags to view filament info via a regular webpage.
+
+**Why this over other approaches?**
+- Any phone can read it — no special app needed, just a browser
+- Human-readable text format, easy to understand and edit
+- You can customize tags for your own use (e.g. label a spool as yours so others don't accidentally grab it)
+- Easy to tag your own spools in bulk, even from other brands
+
 ---
 
-## 协议规范
+## How the Data is Stored
 
-### 数据格式
-- **结构**：
-  - 以 `en~` 开头
-  - 以 `~` 结尾
-  - 字段之间用 `-`（连字符）分隔
-- **语言**：字段内容无限制，建议使用英文以保证广泛兼容性。
+Each NFC tag holds a short text string that encodes all your filament's details. It's designed to be compact, readable, and safe to embed in a URL — so scanning the tag can open a webpage that displays everything nicely.
 
-### 字段顺序及说明
-| 序号 | 字段名（中文） | 字段名（英文） | 说明 / 示例 |
-|------|----------------|----------------|-------------|
-| 0    | URL            | URL           | 固定为 `https://eryoneoffical.github.io/RFID_Web/?data=` |
-| 1    | 头             | Header         | 固定为 `en~` |
-| 2    | 厂商           | Manufacturer   | 例如 `ERYONE` |
-| 3    | 耗材主类型     | Material Name  | 例如 `PLA`、`ABS`、`PETG` |
-| 4    | 耗材子类型     | Material Supplement | 若无子类型，为空 |
-| 5    | 颜色           | Color          | 6位十六进制RGB值，例如 `000000` 表示黑色，`FF00FF` 表示紫色 |
-| 6    | 透明度         | Transparency   | 2位十六进制，`00` = 完全透明，`FF` = 完全不透明 |
-| 7    | 打印最小温度   | Min Temperature | 单位：°C，例如 `190` |
-| 8    | 打印最大温度   | Max Temperature | 单位：°C，例如 `230` |
-| 9    | 热床温度       | Bed Temperature | 单位：°C，例如 `60` |
-| 10   | 直径           | Filament Diameter | 存储为整数，实际值需 **除以100** 得到毫米，例如 `175` = 1.75mm |
-| 11   | 重量           | Filament Weight | 单位：克（g），例如 `1000` |
-| 12   | 生产日期       | Production Date | 格式：`YYMM`，例如 `2602` 表示 2026年02月 |
-| 13   | 尾             | Tail           | 固定为 `~` |
+### Format at a Glance
+- Starts with `en~`
+- Ends with `~`
+- Fields are separated by `-` (hyphens)
 
-### 数据格式示例
+### Fields in Order
+
+| # | Field | Description & Example |
+|---|-------|-----------------------|
+| 0 | URL | Always: `https://eryoneoffical.github.io/RFID_Web/?data=` |
+| 1 | Header | Always: `en~` |
+| 2 | Manufacturer | e.g. `ERYONE` |
+| 3 | Material | e.g. `PLA`, `ABS`, `PETG` |
+| 4 | Sub-type | Optional — leave blank if not needed |
+| 5 | Color | Hex color code (6 digits) — e.g. `000000` = black, `FF0000` = red |
+| 6 | Transparency | Hex opacity — `00` = clear, `FF` = solid |
+| 7 | Min Print Temp | In °C — e.g. `190` |
+| 8 | Max Print Temp | In °C — e.g. `230` |
+| 9 | Bed Temp | In °C — e.g. `60` |
+| 10 | Diameter | Stored ×100 — e.g. `175` means 1.75mm |
+| 11 | Weight | In grams — e.g. `1000` |
+| 12 | Production Date | `YYMM` format — e.g. `2602` = Feb 2026 |
+| 13 | Tail | Always: `~` |
+
+### Example
+
 ```
 en~ERYONE-PLA--000000-FF-190-230-60-175-1000-2602~
 ```
-**解析含义**：
-- 厂商：ERYONE
-- 主材料：PLA
-- 子类型：无（两个 - 之间为空）
-- 颜色：黑色（#000000）
-- 透明度：完全不透明
-- 打印温度范围：190°C – 230°C
-- 热床温度：60°C
-- 直径：1.75mm
-- 重量：1000g
-- 生产日期：2026年2月
-  
-### 用于URL的完整链接示例
+
+Breaking that down:
+- **Brand:** ERYONE
+- **Material:** PLA (no sub-type)
+- **Color:** Black (#000000), fully opaque
+- **Print temp:** 190°C – 230°C
+- **Bed temp:** 60°C
+- **Diameter:** 1.75mm
+- **Weight:** 1000g
+- **Made:** February 2026
+
+### Full URL (what gets written to the tag)
+
 ```
 https://eryoneoffical.github.io/RFID_Web/?data=en~ERYONE-PLA--000000-FF-190-230-60-175-1000-2602~
 ```
-将此链接写入NFC标签，任何手机扫描后将自动打开该网页，网页会解析 data 参数并显示耗材信息。
+
+Scan this with any phone and it opens a webpage showing all the filament details automatically.
 
 ---
 
-## 配套Web工具：https://eryoneoffical.github.io/RFID_Web/
-- **项目提供了一个基于Web NFC API的网页工具（index.html），支持：**
-  - 在Android Chrome中直接读取/写入符合本协议的NFC标签。
-  - 通过URL参数自动解析并显示耗材信息。
-  - 可视化展示颜色方块、温度范围、生产日期等。
+## The Web Tool 🌐
 
-### 主要功能
-- 1.读取标签：点击“开始读取”并将标签贴近手机，自动解析并显示。
-- 2.写入标签：通过表单填写耗材参数，生成符合协议的数据，一键写入NFC标签。
-- 3.URL参数解析：当通过带有 ?data=... 参数的链接访问时，自动解码并展示耗材信息，无需NFC操作。
+**👉 https://eryoneoffical.github.io/RFID_Web/**
 
-### 使用说明
-- Android用户：请使用Chrome浏览器，确保NFC已开启。
-- iOS用户：不支持Web NFC，但可通过扫描NFC标签（触发URL）或直接访问带参数的链接来查看耗材信息。可通过生成的写入数据格式通过其他APP自行写入标签中
+This is your one-stop tool for reading and writing filament tags. Open it in Chrome on Android and you can interact with NFC tags directly — no extra apps needed.
+
+### What You Can Do
+
+1. **Read a tag** — Tap "Start Reading", hold your phone near the tag, and the filament info pops up automatically.
+2. **Write a tag** — Fill in your filament details using the form, then tap to write it to a blank NFC tag in one go.
+3. **Share via link** — Any URL with `?data=...` will display the filament info right in the browser, even without an NFC tag involved.
+
+### Android vs iPhone
+
+| | Android | iPhone |
+|---|---------|--------|
+| Read tags | ✅ Chrome (built-in NFC) | ✅ Scan tag → opens webpage |
+| Write tags | ✅ Chrome (built-in NFC) | ⚠️ Use a third-party NFC app with the generated data string |
+| View via URL | ✅ | ✅ |
 
 ---
 
-## 注意
-- 本协议中的所有字符均为URL安全字符（字母、数字、-、~），可直接在URL中传递，无需百分号编码。
+## Good to Know
 
-
-
-
+- All characters used in the data format are URL-safe (letters, numbers, `-`, `~`), so no messy encoding is needed.
+- Blank NFC stickers like the **NTAG213** work great for this.
+- You can tag spools from any brand, not just ERYONE!
