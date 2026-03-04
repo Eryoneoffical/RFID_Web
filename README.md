@@ -1,16 +1,20 @@
 # ERYONE Filament RFID — Smart Tags for Your Spools 🎯
 
-![ERYONE RFID Demo](32.gif)
+
 
 Ever wish your 3D printer just *knew* what filament you loaded? That's exactly what this project does. ERYONE's RFID protocol lets you store filament settings directly on a small NFC sticker attached to your spool. Tap it with your phone and instantly see the material type, color, print temperatures, and more — no app required.
 
-It works with any NFC-enabled phone. Android users get full read/write support right in Chrome. iPhone users can scan tags to view filament info via a regular webpage.
+It works with any NFC-enabled phone. 
 
-**Why this over other approaches?**
+**Why define a new protocol?**
 - Any phone can read it — no special app needed, just a browser
 - Human-readable text format, easy to understand and edit
 - You can customize tags for your own use (e.g. label a spool as yours so others don't accidentally grab it)
 - Easy to tag your own spools in bulk, even from other brands
+
+
+![ERYONE RFID Demo](32.gif)
+
 
 ---
 
